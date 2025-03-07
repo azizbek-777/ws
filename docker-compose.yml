@@ -1,0 +1,45 @@
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: ./_docker/images/nginx/Dockerfile
+    container_name: ws_nginx
+    volumes:
+      - ./_docker/images/nginx/conf.d/localhost:/etc/nginx/conf.d/
+      - ./:/var/www/backend/
+      - nginx_data:/etc/nginx
+      - nginx_logs:/var/log/nginx
+    ports:
+      - "8000:80"
+    restart: always
+    networks:
+      - ws_network
+
+  chat:
+    build:
+      context: .
+      dockerfile: ./_docker/images/node/Dockerfile
+    container_name: ws_chat
+    command: npm run dev
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./chat:/app
+      - /app/node_modules
+    restart: always
+    depends_on:
+      - nginx
+    networks:
+      - ws_network
+
+volumes:
+  nginx_data:
+    driver: local
+  nginx_logs:
+    driver: local
+
+networks:
+  ws_network:
+    driver: bridge
