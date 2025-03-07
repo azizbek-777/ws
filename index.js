@@ -1,22 +1,23 @@
-const express = require("express");
 const http = require("http");
+const uWS = require("uWebSockets.js");
 const { Server } = require("socket.io");
 
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-    transports: ["websocket"],
+const app = uWS.App();
+const io = new Server({
     cors: {
-        origin: "*", // Ruxsat berilgan domen
+        origin: "*",
     },
+    transports: ["polling", "websocket"],
 });
+
+io.attachApp(app);
 
 io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
 
     socket.on("message", (data) => {
         console.log("Message received:", data);
-        io.emit("message", data); // Barcha clientlarga yuborish
+        io.emit("message", data);
     });
 
     socket.on("disconnect", () => {
@@ -24,6 +25,10 @@ io.on("connection", (socket) => {
     });
 });
 
-server.listen(3000, () => {
-    console.log("Server listening on port 3000");
+const PORT = 3000;
+app.listen(PORT, async (token) => {
+    if (token) {
+        console.log("🚀Server is running on " + PORT);
+    }
+    else console.warn("❌ Port already in use");
 });
